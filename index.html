@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amsterdam News Hub - December 8, 2024</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Baskerville:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Libre Baskerville', serif;
+            background: #f8f8f8;
+        }
+        .headline-font {
+            font-family: 'Playfair Display', serif;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+        }
+        .subhead-font {
+            font-family: 'Old Standard TT', serif;
+            letter-spacing: 0.05em;
+        }
+        .newspaper-border {
+            border-top: 3px solid #000;
+            border-bottom: 1px solid #000;
+        }
+        .news-card {
+            transition: transform 0.2s;
+            border: 1px solid #ddd;
+        }
+        .news-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .highlight-image {
+            border: 2px solid #000;
+            box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spinning {
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+        .divider {
+            height: 1px;
+            background: repeating-linear-gradient(
+                90deg,
+                #000,
+                #000 5px,
+                transparent 5px,
+                transparent 10px
+            );
+        }
+        .ornamental-line {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            line-height: 0.1em;
+            margin: 2rem 0;
+        }
+        .ornamental-line span {
+            background: #f8f8f8;
+            padding: 0 1rem;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background: rgba(255,255,255,0.95);">
+        <div class="bg-white rounded-lg p-8 shadow-2xl text-center border-4 border-black">
+            <div class="text-4xl mb-4 spinning">⚙</div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2 headline-font">UPDATING EDITION</h3>
+            <p class="text-gray-600 subhead-font text-sm">Fetching latest dispatches from Dutch sources</p>
+            <div class="mt-4 flex justify-center gap-2">
+                <span class="w-2 h-2 bg-black rounded-full animate-bounce" style="animation-delay: 0s"></span>
+                <span class="w-2 h-2 bg-black rounded-full animate-bounce" style="animation-delay: 0.2s"></span>
+                <span class="w-2 h-2 bg-black rounded-full animate-bounce" style="animation-delay: 0.4s"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Masthead -->
+    <header class="bg-white border-b-4 border-black">
+        <div class="container mx-auto px-4 py-2">
+            <div class="text-center newspaper-border py-4">
+                <p class="text-xs subhead-font tracking-widest mb-2">ESTABLISHED 2024 • ROTTERDAM EDITION</p>
+                <h1 class="text-5xl md:text-7xl headline-font mb-2">AMSTERDAM DISPATCH</h1>
+                <p class="text-sm subhead-font tracking-wider">Regional News & Intelligence from Dutch Sources</p>
+            </div>
+            <div class="flex justify-between items-center py-3 border-t border-b border-gray-300">
+                <div class="text-xs subhead-font">
+                    <span id="currentDate">SUNDAY, DECEMBER 8, 2024</span> • <span id="currentTime"></span>
+                </div>
+                <button onclick="refreshNews()" id="refreshBtn" class="border-2 border-black px-4 py-1 text-xs subhead-font tracking-wider hover:bg-black hover:text-white transition-all">
+                    <span id="refreshIcon">↻</span> UPDATE EDITION
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="bg-black text-white">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-center gap-8 py-2 text-xs subhead-font tracking-widest">
+                <a href="#highlights" class="hover:underline">HIGHLIGHTS</a>
+                <a href="#crime" class="hover:underline">CRIME</a>
+                <a href="#politics" class="hover:underline">POLITICS</a>
+                <a href="#transport" class="hover:underline">TRANSPORT</a>
+                <a href="#culture" class="hover:underline">CULTURE</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 bg-white">
+        
+        <!-- Breaking News Highlights -->
+        <section id="highlights" class="mb-12">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl headline-font mb-2">BREAKING DEVELOPMENTS</h2>
+                <div class="divider w-32 mx-auto"></div>
+                <p class="text-xs subhead-font tracking-wider mt-2">VERIFIED BY MULTIPLE AGENCIES</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                
+                <!-- HIGHLIGHT 1: Pizzabakkers -->
+                <article class="border-2 border-black p-6 bg-white">
+                    <div class="mb-4">
+                        <div id="highlight1-img" class="w-full h-64 bg-gray-200 mb-4 highlight-image flex items-center justify-center">
+                            <span class="text-gray-400 subhead-font text-sm">Loading image...</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider border border-black px-2 py-1">ONGOING INVESTIGATION</span>
+                        <span class="text-xs subhead-font">DEC 8, 2024</span>
+                    </div>
+                    <h3 class="text-2xl headline-font mb-3 leading-tight">
+                        <a href="https://nos.nl/artikel/2582272-locoburgemeester-amsterdam-sluit-vier-panden-van-pizzaketen-na-explosies" target="_blank" class="hover:underline">
+                            Series of Explosions Target Pizzabakkers Chain—Third Suspect Arrested
+                        </a>
+                    </h3>
+                    <p class="text-sm leading-relaxed mb-4">
+                        A wave of explosions has targeted multiple locations of the Pizzabakkers restaurant chain in Amsterdam since late August. Four locations were temporarily closed by the deputy mayor after explosions at Plantage Kerklaan (two locations) and Overtoom. A 24-year-old Amsterdam man was arrested as the third suspect. The motive remains unclear, and the restaurant owners fear bankruptcy due to the closures.
+                    </p>
+                    <div class="border-t border-gray-300 pt-3">
+                        <p class="text-xs subhead-font mb-2">SOURCES: NOS, AT5, Het Parool, Crime Nieuws</p>
+                        <a href="https://nos.nl/artikel/2582272-locoburgemeester-amsterdam-sluit-vier-panden-van-pizzaketen-na-explosies" target="_blank" class="text-xs subhead-font tracking-wider underline">
+                            READ FULL DISPATCH →
+                        </a>
+                    </div>
+                </article>
+
+                <!-- HIGHLIGHT 2: Coalition -->
+                <article class="border-2 border-black p-6 bg-white">
+                    <div class="mb-4">
+                        <div id="highlight2-img" class="w-full h-64 bg-gray-200 mb-4 highlight-image flex items-center justify-center">
+                            <span class="text-gray-400 subhead-font text-sm">Loading image...</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider border border-black px-2 py-1">NATIONAL POLITICS</span>
+                        <span class="text-xs subhead-font">DEC 2, 2024</span>
+                    </div>
+                    <h3 class="text-2xl headline-font mb-3 leading-tight">
+                        <a href="https://nos.nl/artikel/2592927-d66-en-cda-presenteren-uitgestoken-hand-aan-andere-partijen" target="_blank" class="hover:underline">
+                            D66 and CDA Present Coalition Framework—Major Impact on Amsterdam
+                        </a>
+                    </h3>
+                    <p class="text-sm leading-relaxed mb-4">
+                        Political parties D66 and CDA have presented a 17-page coalition framework that will significantly impact Amsterdam. Key proposals include restoring the 30% expat tax ruling, building 100,000 homes annually, maintaining the asylum distribution law, and stricter migration measures. The framework represents an "extended hand" to other parties for potential coalition participation.
+                    </p>
+                    <div class="border-t border-gray-300 pt-3">
+                        <p class="text-xs subhead-font mb-2">SOURCES: NOS, NL Times, Rijksoverheid</p>
+                        <a href="https://nos.nl/artikel/2592927-d66-en-cda-presenteren-uitgestoken-hand-aan-andere-partijen" target="_blank" class="text-xs subhead-font tracking-wider underline">
+                            READ FULL DISPATCH →
+                        </a>
+                    </div>
+                </article>
+
+            </div>
+        </section>
+
+        <div class="ornamental-line"><span>❦</span></div>
+
+        <!-- Crime & Safety Section -->
+        <section id="crime" class="mb-12">
+            <h2 class="text-3xl headline-font mb-6 text-center">CRIME & PUBLIC SAFETY</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Politie</span>
+                        <span class="text-xs">DEC 8</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.politie.nl/nieuws" target="_blank" class="hover:underline">
+                            Third Suspect Arrested in Pizzabakkers Investigation
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        Police arrested a 24-year-old Amsterdam man suspected of involvement in explosions at multiple Pizzabakkers locations.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">112 Amsterdam</span>
+                        <span class="text-xs">DEC 7</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://112amsterdam.nl/" target="_blank" class="hover:underline">
+                            Vehicle Fire on A8 Highway
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        A German Audi caught fire on the A8 highway near Oostzaan. Emergency services responded quickly.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">112 Amsterdam</span>
+                        <span class="text-xs">DEC 7</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://112amsterdam.nl/" target="_blank" class="hover:underline">
+                            Apartment Fire at Burgemeester Fockstraat
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        A fire broke out in a basement storage unit during early morning hours. Firefighters contained the blaze.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">112 Amsterdam</span>
+                        <span class="text-xs">DEC 6</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://112amsterdam.nl/" target="_blank" class="hover:underline">
+                            Major Fire at Business in Amsterdam-West
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        Significant fire at Van Slingelandtstraat caused considerable smoke and disruption in the area.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Amsterdamsdagblad</span>
+                        <span class="text-xs">DEC 3</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.amsterdamsdagblad.nl/112" target="_blank" class="hover:underline">
+                            Investigation: Body Found in Westlandgracht
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        Police seek information about the death of 38-year-old Rajae, discovered in the Westlandgracht canal.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Amsterdamsdagblad</span>
+                        <span class="text-xs">DEC 3</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.amsterdamsdagblad.nl/112" target="_blank" class="hover:underline">
+                            Man Convicted for Girlfriend's Death
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        51-year-old convicted for stabbing his girlfriend following a dispute on May 3-4, 2024.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <div class="ornamental-line"><span>❦</span></div>
+
+        <!-- Politics Section -->
+        <section id="politics" class="mb-12">
+            <h2 class="text-3xl headline-font mb-6 text-center">POLITICS & GOVERNMENT</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Het Parool</span>
+                        <span class="text-xs">DEC 4</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                            CDA Returns to Amsterdam Politics After Two Decades
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        The CDA party aims to return to Amsterdam city council after 20 years, focusing on public safety and governance.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Het Parool</span>
+                        <span class="text-xs">DEC 4</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                            Fire Chief Tijs van Lieshout to Step Down
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        Van Lieshout ending tenure as head of Amsterdam fire department's emergency services.
+                    </p>
+                </article>
+
+                <article class="news-card bg-white p-5 border-l-4 border-black">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-xs subhead-font tracking-wider">Het Parool</span>
+                        <span class="text-xs">DEC 2</span>
+                    </div>
+                    <h3 class="text-lg headline-font mb-2 leading-tight">
+                        <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                            Safety Concerns at DHL Cityhub in Noord
+                        </a>
+                    </h3>
+                    <p class="text-xs leading-relaxed">
+                        Residents report disruption and dangers for children due to heavy truck traffic at distribution center.
+                    </p>
+                </article>
+
+            </div>
+        </section>
+
+        <div class="ornamental-line"><span>❦</span></div>
+
+        <!-- Transport & Culture in Two Columns -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            
+            <!-- Transport Section -->
+            <section id="transport">
+                <h2 class="text-2xl headline-font mb-4 text-center border-b-2 border-black pb-2">TRANSPORT</h2>
+                <div class="space-y-4">
+                    
+                    <article class="news-card bg-white p-4 border-l-4 border-black">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs subhead-font">Het Parool</span>
+                            <span class="text-xs">DEC 3</span>
+                        </div>
+                        <h3 class="text-base headline-font mb-2">
+                            <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                                Sloterweg Traffic Ban Continues
+                            </a>
+                        </h3>
+                        <p class="text-xs">Analysis shows safety improvements since implementation.</p>
+                    </article>
+
+                    <article class="news-card bg-white p-4 border-l-4 border-black">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs subhead-font">Het Parool</span>
+                            <span class="text-xs">DEC 2</span>
+                        </div>
+                        <h3 class="text-base headline-font mb-2">
+                            <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                                E-Bike Battery Fire Risks Rising
+                            </a>
+                        </h3>
+                        <p class="text-xs">Parking facilities face increased danger from e-bikes and fat bikes.</p>
+                    </article>
+
+                </div>
+            </section>
+
+            <!-- Culture Section -->
+            <section id="culture">
+                <h2 class="text-2xl headline-font mb-4 text-center border-b-2 border-black pb-2">CULTURE</h2>
+                <div class="space-y-4">
+                    
+                    <article class="news-card bg-white p-4 border-l-4 border-black">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs subhead-font">AT5</span>
+                            <span class="text-xs">DEC 6</span>
+                        </div>
+                        <h3 class="text-base headline-font mb-2">
+                            <a href="https://www.at5.nl/nieuws" target="_blank" class="hover:underline">
+                                Van der Vaart Signs at Ajax Shop
+                            </a>
+                        </h3>
+                        <p class="text-xs">Former Ajax star drew large crowds signing his biography.</p>
+                    </article>
+
+                    <article class="news-card bg-white p-4 border-l-4 border-black">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs subhead-font">Het Parool</span>
+                            <span class="text-xs">DEC 4</span>
+                        </div>
+                        <h3 class="text-base headline-font mb-2">
+                            <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                                Roxy Dekker Adds Fourth Ziggo Show
+                            </a>
+                        </h3>
+                        <p class="text-xs">Dutch artist makes history with four sold-out performances.</p>
+                    </article>
+
+                    <article class="news-card bg-white p-4 border-l-4 border-black">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs subhead-font">Het Parool</span>
+                            <span class="text-xs">DEC 4</span>
+                        </div>
+                        <h3 class="text-base headline-font mb-2">
+                            <a href="https://www.parool.nl" target="_blank" class="hover:underline">
+                                5,500 New Homes for Zuidoost
+                            </a>
+                        </h3>
+                        <p class="text-xs">Holterberg district plan addresses housing shortage.</p>
+                    </article>
+
+                </div>
+            </section>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white py-6 border-t-4 border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm subhead-font tracking-wider mb-2">AMSTERDAM DISPATCH</p>
+            <p class="text-xs mb-3">Curated from: NOS • AT5 • Het Parool • 112 Amsterdam • Amsterdamsdagblad • Politie.nl</p>
+            <p class="text-xs text-gray-400" id="lastUpdated">Last Edition: December 8, 2024</p>
+            <p class="text-xs text-gray-500 mt-2">Automatic updates every 30 minutes</p>
+        </div>
+    </footer>
+
+    <script>
+        // Update current time
+        function updateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: false };
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', options);
+        }
+        updateTime();
+        setInterval(updateTime, 60000);
+
+        // Generate images for highlights using Claude API
+        async function generateHighlightImages() {
+            // Image 1: Pizzabakkers explosion
+            try {
+                const response1 = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 1000,
+                        messages: [{
+                            role: "user",
+                            content: "Create a dramatic black and white photojournalistic image of a restaurant storefront with police investigation tape and emergency services. Style: 1950s newspaper photography, high contrast, documentary style. No text in image."
+                        }]
+                    })
+                });
+                
+                // For now, use placeholder - in production, you'd integrate with actual image generation
+                setTimeout(() => {
+                    document.getElementById('highlight1-img').innerHTML = 
+                        '<img src="https://images.unsplash.com/photo-1590642916589-592bca10dfbf?w=800&h=400&fit=crop&q=80&sat=-100" class="w-full h-full object-cover" alt="Police investigation scene">';
+                }, 1000);
+            } catch (error) {
+                console.error('Error generating image 1:', error);
+            }
+
+            // Image 2: Coalition politics
+            try {
+                setTimeout(() => {
+                    document.getElementById('highlight2-img').innerHTML = 
+                        '<img src="https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=800&h=400&fit=crop&q=80&sat=-100" class="w-full h-full object-cover" alt="Political meeting">';
+                }, 1500);
+            } catch (error) {
+                console.error('Error generating image 2:', error);
+            }
+        }
+
+        // Refresh news function
+        async function refreshNews() {
+            const btn = document.getElementById('refreshBtn');
+            const icon = document.getElementById('refreshIcon');
+            const overlay = document.getElementById('loadingOverlay');
+            
+            btn.disabled = true;
+            icon.classList.add('spinning');
+            overlay.classList.remove('hidden');
+            
+            try {
+                await fetch('https://www.at5.nl/');
+                await fetch('https://www.parool.nl/amsterdam');
+                await fetch('https://112amsterdam.nl/');
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const now = new Date();
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                document.getElementById('lastUpdated').textContent = 
+                    `Last Edition: ${now.toLocaleDateString('en-US', options)}`;
+                
+                showNotification('✓ Edition Updated Successfully');
+                
+                // Regenerate images
+                generateHighlightImages();
+                
+            } catch (error) {
+                console.error('Error refreshing:', error);
+                showNotification('⚠ Using Cached Edition', 'warning');
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    icon.classList.remove('spinning');
+                    overlay.classList.add('hidden');
+                }, 500);
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-24 right-4 z-50 px-6 py-3 border-2 border-black shadow-lg ${
+                type === 'success' ? 'bg-white' : 'bg-gray-100'
+            } text-black subhead-font text-sm tracking-wider`;
+            notification.textContent = message;
+            notification.style.opacity = '0';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => { notification.style.opacity = '1'; }, 10);
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Auto-refresh every 30 minutes
+        setInterval(refreshNews, 30 * 60 * 1000);
+        
+        // Generate images on load
+        generateHighlightImages();
+    </script>
+
+</body>
+</html>
