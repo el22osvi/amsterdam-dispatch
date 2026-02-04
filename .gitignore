@@ -1,0 +1,15 @@
+# Dependency folders (The big folders we don't want)
+node_modules/
+jspm_packages/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Secret files (In case you use a .env file locally)
+.env
