@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const Anthropic = require('@anthropic-ai/sdk');
+const Anthropic = require('@google/generative-ai');
 
 const app = express();
 app.use(cors());
