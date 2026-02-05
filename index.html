@@ -134,32 +134,32 @@
         }
 
         // --- PARSER LOGIC ---
-       function parseNewsResponse(text) {
-    // Split by the dash separator
-    const sections = text.split('---').filter(s => s.trim().length > 20);
+function parseNewsResponse(newsText) {
+    // 1. Split by the divider '---'
+    const sections = newsText.split('---').filter(s => s.trim().length > 20);
     const result = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
 
     sections.forEach(section => {
         const article = {};
-        const lines = section.split('\n');
+        const lines = section.split('\n').map(l => l.trim()).filter(l => l.includes(':'));
         
         lines.forEach(line => {
-            const upperLine = line.trim().toUpperCase();
-            // Safer URL extraction: finds any string starting with http
-            if (upperLine.includes('URL:')) {
-                const urlMatch = line.match(/https?:\/\/[^\s]+/g);
-                article.url = urlMatch ? urlMatch[0] : "#";
-            } else if (upperLine.startsWith('CATEGORY:')) {
-                article.category = line.split(':')[1].trim();
-            } else if (upperLine.startsWith('TITLE:')) {
-                article.title = line.split(':')[1].trim();
-            } else if (upperLine.startsWith('SOURCE:')) {
-                article.source = line.split(':')[1].trim();
-            } else if (upperLine.startsWith('DESCRIPTION:')) {
-                article.description = line.split(':')[1].trim();
+            const firstColon = line.indexOf(':');
+            const key = line.substring(0, firstColon).trim().toUpperCase();
+            const val = line.substring(firstColon + 1).trim();
+            
+            if (key === 'CATEGORY') article.category = val;
+            if (key === 'TITLE') article.title = val;
+            if (key === 'SOURCE') article.source = val;
+            if (key === 'DATE') article.date = val;
+            if (key === 'DESCRIPTION') article.description = val;
+            if (key === 'URL') {
+                // Remove any accidental trailing symbols from the URL
+                article.url = val.split(' ')[0].replace(/[)]/g, ''); 
             }
         });
 
+        // 2. Only add the article if it has a Title and a Category
         if (article.title && article.category) {
             const cat = article.category.toUpperCase();
             if (cat.includes('HIGHLIGHT')) result.highlights.push(article);
@@ -169,6 +169,7 @@
             else if (cat.includes('CULTURE')) result.culture.push(article);
         }
     });
+
     return result;
 }
             return result;
