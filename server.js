@@ -44,7 +44,26 @@ app.post('/api/fetch-news', async (req, res) => {
         }
 
         // Using the 2026 Stable Alias
-        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        try {
+    // USE THIS STABLE ALIAS instead of a specific version number
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); 
+
+    const prompt = `... your prompt ...`;
+    
+    // Add a timeout safety - sometimes the AI takes too long
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+
+    if (!text || text.length < 5) {
+        throw new Error("AI returned empty or invalid text.");
+    }
+
+    res.json({ content: [{ text: text }] });
+} catch (error) {
+    console.error("DETAILED ERROR:", error);
+    // Send the actual error back so we can see it in the browser console
+    res.status(500).json({ error: error.message });
+};
 
         const prompt = `
             Task: Curate the Amsterdam Dispatch.
