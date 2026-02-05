@@ -113,17 +113,13 @@
                 
                 if (data && data.content && data.content[0].text) {
                     const freshData = parseNewsResponse(data.content[0].text);
-                    const hasNews = Object.values(freshData).some(arr => arr.length > 0);
-                    
-                    if (hasNews) {
-                        newsData = freshData;
-                        renderNews();
-                        updateLastUpdated();
-                    }
+                    newsData = freshData;
+                    renderNews();
+                    updateLastUpdated();
                 }
             } catch (error) {
                 console.error('Update failed:', error);
-                alert("The server is still waking up. Please try again in 15 seconds.");
+                alert("The server is still waking up. Please try again.");
             } finally {
                 overlay.classList.add('hidden');
                 btn.disabled = false;
@@ -131,7 +127,11 @@
         }
 
         function parseNewsResponse(newsText) {
-            const sections = newsText.split('---').filter(s => s.trim().length > 20);
+            // FIND the first occurrence of "CATEGORY:" to skip AI intro talk
+            const startIndex = newsText.indexOf("CATEGORY:");
+            const cleanText = startIndex !== -1 ? newsText.substring(startIndex) : newsText;
+
+            const sections = cleanText.split('---').filter(s => s.trim().length > 20);
             const result = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
 
             sections.forEach(section => {
@@ -140,6 +140,8 @@
                 
                 lines.forEach(line => {
                     const firstColon = line.indexOf(':');
+                    if (firstColon === -1) return;
+                    
                     const key = line.substring(0, firstColon).trim().toUpperCase();
                     const val = line.substring(firstColon + 1).trim();
                     
@@ -176,8 +178,7 @@
                 </article>
             `).join('');
 
-            // Crime
-            document.getElementById('crimeContainer').innerHTML = newsData.crime.map(a => `
+            const simpleList = (arr) => arr.map(a => `
                 <article class="news-card bg-white p-5 border-l-4 border-black fade-in mb-4">
                     <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
                     <p class="text-xs">${a.description}</p>
@@ -185,36 +186,15 @@
                 </article>
             `).join('');
 
-            // Politics
-            document.getElementById('politicsContainer').innerHTML = newsData.politics.map(a => `
-                <article class="news-card bg-white p-5 border-l-4 border-black fade-in mb-4">
-                    <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
-                    <p class="text-xs">${a.description}</p>
-                    <div class="text-[10px] mt-2 uppercase font-bold text-gray-500">${a.source}</div>
-                </article>
-            `).join('');
-
-            // Transport
-            document.getElementById('transportContainer').innerHTML = newsData.transport.map(a => `
-                <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
-                    <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
-                    <p class="text-xs text-gray-700">${a.description}</p>
-                </article>
-            `).join('');
-
-            // Culture
-            document.getElementById('cultureContainer').innerHTML = newsData.culture.map(a => `
-                <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
-                    <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
-                    <p class="text-xs text-gray-700">${a.description}</p>
-                </article>
-            `).join('');
+            document.getElementById('crimeContainer').innerHTML = simpleList(newsData.crime);
+            document.getElementById('politicsContainer').innerHTML = simpleList(newsData.politics);
+            document.getElementById('transportContainer').innerHTML = simpleList(newsData.transport);
+            document.getElementById('cultureContainer').innerHTML = simpleList(newsData.culture);
         }
 
         function updateLastUpdated() {
             const now = new Date();
-            const lastUpdatedElem = document.getElementById('lastUpdated');
-            if(lastUpdatedElem) lastUpdatedElem.textContent = `Last Edition: ${now.toLocaleString()}`;
+            document.getElementById('lastUpdated').textContent = `Last Edition: ${now.toLocaleString()}`;
         }
 
         function updateDateTime() {
@@ -225,7 +205,6 @@
 
         updateDateTime();
         setInterval(updateDateTime, 60000);
-        updateLastUpdated();
     </script>
 </body>
 </html>
