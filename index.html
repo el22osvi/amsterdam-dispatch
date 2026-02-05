@@ -1,214 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amsterdam News Hub - Live Edition</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Libre+Baskerville:wght@400;700&family=Old+Standard+TT:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Libre Baskerville', serif; background: #f8f8f8; }
-        .headline-font { font-family: 'Playfair Display', serif; font-weight: 900; letter-spacing: -0.02em; }
-        .subhead-font { font-family: 'Old Standard TT', serif; letter-spacing: 0.05em; }
-        .newspaper-border { border-top: 3px solid #000; border-bottom: 1px solid #000; }
-        .news-card { transition: transform 0.2s; border: 1px solid #ddd; }
-        .news-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .highlight-image { border: 2px solid #000; box-shadow: 4px 4px 0 rgba(0,0,0,0.1); }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .spinning { animation: spin 1s linear infinite; display: inline-block; }
-        .divider { height: 1px; background: repeating-linear-gradient(90deg, #000, #000 5px, transparent 5px, transparent 10px); }
-        .ornamental-line { text-align: center; border-bottom: 2px solid #000; line-height: 0.1em; margin: 2rem 0; }
-        .ornamental-line span { background: #f8f8f8; padding: 0 1rem; font-size: 1.5rem; }
-        .fade-in { animation: fadeIn 0.5s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body class="bg-gray-50">
-
-    <div id="loadingOverlay" class="fixed inset-0 z-50 flex items-center justify-center hidden" style="background: rgba(255,255,255,0.95);">
-        <div class="bg-white rounded-lg p-8 shadow-2xl text-center border-4 border-black">
-            <div class="text-4xl mb-4 spinning">⚙</div>
-            <h3 class="text-xl font-bold text-gray-900 mb-2 headline-font">UPDATING EDITION</h3>
-            <p id="loadingStatus" class="text-gray-600 subhead-font text-sm">Waking up server & fetching dispatches...</p>
-        </div>
-    </div>
-
-    <header class="bg-white border-b-4 border-black">
-        <div class="container mx-auto px-4 py-2">
-            <div class="text-center newspaper-border py-4">
-                <p class="text-xs subhead-font tracking-widest mb-2">ESTABLISHED 2024 • LATEST EDITION</p>
-                <h1 class="text-5xl md:text-7xl headline-font mb-2">AMSTERDAM DISPATCH</h1>
-                <p class="text-sm subhead-font tracking-wider">Regional News & Intelligence from Dutch Sources</p>
-            </div>
-            <div class="flex justify-between items-center py-3 border-t border-b border-gray-300">
-                <div class="text-xs subhead-font">
-                    <span id="currentDate"></span> • <span id="currentTime"></span>
-                </div>
-                <button onclick="refreshNews()" id="refreshBtn" class="border-2 border-black px-4 py-1 text-xs subhead-font tracking-wider hover:bg-black hover:text-white transition-all">
-                    <span id="refreshIcon">↻</span> UPDATE EDITION
-                </button>
-            </div>
-        </div>
-    </header>
-
-    <main class="container mx-auto px-4 py-8 bg-white">
-        <section id="highlights" class="mb-12">
-            <div id="highlightsContainer" class="grid grid-cols-1 lg:grid-cols-2 gap-8"></div>
-        </section>
-
-        <div class="ornamental-line"><span>❦</span></div>
-
-        <section id="crime" class="mb-12">
-            <h2 class="text-3xl headline-font mb-6 text-center">CRIME & PUBLIC SAFETY</h2>
-            <div id="crimeContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-        </section>
-
-        <div class="ornamental-line"><span>❦</span></div>
-        <section id="politics" class="mb-12">
-            <h2 class="text-3xl headline-font mb-6 text-center">POLITICS & GOVERNMENT</h2>
-            <div id="politicsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-        </section>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <section id="transport">
-                <h2 class="text-2xl headline-font mb-4 text-center border-b-2 border-black pb-2">TRANSPORT</h2>
-                <div id="transportContainer" class="space-y-4"></div>
-            </section>
-            <section id="culture">
-                <h2 class="text-2xl headline-font mb-4 text-center border-b-2 border-black pb-2">CULTURE</h2>
-                <div id="cultureContainer" class="space-y-4"></div>
-            </section>
-        </div>
-    </main>
-
-    <footer class="bg-black text-white py-6 mt-12 text-center">
-        <p class="text-xs text-gray-400" id="lastUpdated"></p>
-    </footer>
-
-    <script>
-        let newsData = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
-
-        const categoryImages = {
-            highlight1: 'https://images.unsplash.com/photo-1563906267088-b029e7101114?w=800&h=400&fit=crop&q=80&sat=-100',
-            highlight2: 'https://images.unsplash.com/photo-1541872703-74c5e44368f9?w=800&h=400&fit=crop&q=80&sat=-100'
-        };
-
-        // --- FETCHING LOGIC ---
-        async function refreshNews() {
-            const overlay = document.getElementById('loadingOverlay');
-            const btn = document.getElementById('refreshBtn');
-            overlay.classList.remove('hidden');
-            btn.disabled = true;
-
-            try {
-                // REPLACE THIS WITH YOUR RENDER URL
-                const RENDER_URL = "https://amsterdam-news-dispatch.onrender.com/api/fetch-news";
-                
-                const response = await fetch(RENDER_URL, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" }
-                });
-
-                if (!response.ok) throw new Error('Server issues');
-
-                const data = await response.json();
-                
-                // Gemini response structure
-                if (data && data.content && data.content[0].text) {
-                    const freshData = parseNewsResponse(data.content[0].text);
-                    if (freshData.highlights.length > 0 || freshData.crime.length > 0) {
-                        newsData = freshData;
-                        renderNews();
-                        updateLastUpdated();
-                    }
-                }
-            } catch (error) {
-                console.error('Update failed:', error);
-                alert("The server is still waking up. Please try again in 30 seconds.");
-            } finally {
-                overlay.classList.add('hidden');
-                btn.disabled = false;
-            }
-        }
-
-        // --- PARSER LOGIC ---
-function parseNewsResponse(newsText) {
-    // 1. Split by the divider '---'
-    const sections = newsText.split('---').filter(s => s.trim().length > 20);
-    const result = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
-
-    sections.forEach(section => {
-        const article = {};
-        const lines = section.split('\n').map(l => l.trim()).filter(l => l.includes(':'));
-        
-        lines.forEach(line => {
-            const firstColon = line.indexOf(':');
-            const key = line.substring(0, firstColon).trim().toUpperCase();
-            const val = line.substring(firstColon + 1).trim();
-            
-            if (key === 'CATEGORY') article.category = val;
-            if (key === 'TITLE') article.title = val;
-            if (key === 'SOURCE') article.source = val;
-            if (key === 'DATE') article.date = val;
-            if (key === 'DESCRIPTION') article.description = val;
-            if (key === 'URL') {
-                // Remove any accidental trailing symbols from the URL
-                article.url = val.split(' ')[0].replace(/[)]/g, ''); 
-            }
-        });
-
-        // 2. Only add the article if it has a Title and a Category
-        if (article.title && article.category) {
-            const cat = article.category.toUpperCase();
-            if (cat.includes('HIGHLIGHT')) result.highlights.push(article);
-            else if (cat.includes('CRIME')) result.crime.push(article);
-            else if (cat.includes('POLITIC')) result.politics.push(article);
-            else if (cat.includes('TRANSPORT')) result.transport.push(article);
-            else if (cat.includes('CULTURE')) result.culture.push(article);
-        }
-    });
-
-    return result;
-}
-
-        // --- RENDERING LOGIC ---
+// --- RENDERING LOGIC ---
         function renderNews() {
+            // 1. Render Highlights
             const hCont = document.getElementById('highlightsContainer');
             hCont.innerHTML = newsData.highlights.slice(0,2).map((a, i) => `
                 <article class="border-2 border-black p-6 bg-white fade-in">
-                    <img src="${categoryImages['highlight'+(i+1)]}" class="w-full h-64 object-cover mb-4 highlight-image">
+                    <img src="${categoryImages['highlight'+(i+1)] || categoryImages.highlight1}" class="w-full h-64 object-cover mb-4 highlight-image">
                     <h3 class="text-2xl headline-font mb-3"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
                     <p class="text-sm mb-4">${a.description}</p>
                     <div class="text-xs subhead-font border-t pt-2">SOURCE: ${a.source}</div>
                 </article>
             `).join('');
 
+            // 2. Render Crime
             document.getElementById('crimeContainer').innerHTML = newsData.crime.map(a => `
                 <article class="news-card bg-white p-5 border-l-4 border-black fade-in">
                     <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
                     <p class="text-xs">${a.description}</p>
+                    <div class="text-[10px] mt-2 uppercase font-bold text-gray-500">${a.source}</div>
                 </article>
             `).join('');
 
-            // Add similar maps for politics, transport, culture...
-        }
+            // 3. Render Politics
+            document.getElementById('politicsContainer').innerHTML = newsData.politics.map(a => `
+                <article class="news-card bg-white p-5 border-l-4 border-black fade-in">
+                    <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
+                    <p class="text-xs">${a.description}</p>
+                    <div class="text-[10px] mt-2 uppercase font-bold text-gray-500">${a.source}</div>
+                </article>
+            `).join('');
 
-        function updateLastUpdated() {
-            const now = new Date();
-            document.getElementById('lastUpdated').textContent = `Last Edition: ${now.toLocaleString()}`;
-        }
+            // 4. Render Transport
+            document.getElementById('transportContainer').innerHTML = newsData.transport.map(a => `
+                <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
+                    <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
+                    <p class="text-xs text-gray-700">${a.description}</p>
+                </article>
+            `).join('');
 
-        function updateDateTime() {
-            const now = new Date();
-            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase();
-            document.getElementById('currentTime').textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+            // 5. Render Culture
+            document.getElementById('cultureContainer').innerHTML = newsData.culture.map(a => `
+                <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
+                    <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
+                    <p class="text-xs text-gray-700">${a.description}</p>
+                </article>
+            `).join('');
         }
-
-        updateDateTime();
-        setInterval(updateDateTime, 60000);
-        updateLastUpdated();
-    </script>
-</body>
-</html>
