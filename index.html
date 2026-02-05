@@ -20,12 +20,16 @@
 </head>
 <body>
 
-    <div class="ticker-wrap"><div id="ticker" class="ticker-move"><span class="ticker-item">Awaiting Dispatch...</span></div></div>
+    <div class="ticker-wrap">
+        <div id="ticker" class="ticker-move">
+            <span class="ticker-item">Awaiting Dispatch...</span>
+        </div>
+    </div>
 
     <header class="max-w-6xl mx-auto text-center my-10 px-4">
         <div class="newspaper-border py-8">
-            <h1 class="text-6xl md:text-8xl headline font-black">AMSTERDAM DISPATCH</h1>
-            <p class="uppercase text-xs font-bold mt-2 tracking-widest">Live RSS Intelligence • <span id="displayDate"></span></p>
+            <h1 class="text-6xl md:text-8xl headline font-black text-black">AMSTERDAM DISPATCH</h1>
+            <p class="uppercase text-xs font-bold mt-2 tracking-widest text-black">Live RSS Intelligence • <span id="displayDate"></span></p>
         </div>
         <button onclick="fetchNews()" id="btn" class="mt-6 border-2 border-black px-12 py-2 font-bold hover:bg-black hover:text-white transition-all text-xs tracking-tighter">UPDATE EDITION</button>
     </header>
@@ -45,11 +49,17 @@
 
         <div class="md:col-span-3 space-y-12">
             <section><h2 class="section-title text-2xl">Highlights</h2><div id="highlights-box" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div></section>
+            
             <div class="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t-2 border-black">
                 <section><h2 class="section-title text-xl">The Netherlands</h2><div id="netherlands-box"></div></section>
                 <section><h2 class="section-title text-xl">International</h2><div id="international-box"></div></section>
             </div>
-            <section class="pt-8 border-t border-gray-300"><h2 class="section-title text-xl">Politics & Culture</h2><div id="politics-box" class="grid grid-cols-2 gap-4"></div><div id="culture-box" class="grid grid-cols-2 gap-4 mt-4"></div></section>
+            
+            <section class="pt-8 border-t border-gray-300">
+                <h2 class="section-title text-xl">Politics & Culture</h2>
+                <div id="politics-box" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+                <div id="culture-box" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4"></div>
+            </section>
         </div>
     </main>
 
@@ -57,54 +67,4 @@
         async function fetchNews() {
             const btn = document.getElementById('btn');
             btn.textContent = "PRINTING...";
-            
-            try {
-                const response = await fetch("https://amsterdam-news-dispatch.onrender.com/api/fetch-news", { method: "POST" });
-                const data = await response.json();
-
-                // SAFETY CHECK: Prevents the 0-reading crash
-                if (!response.ok || !data.content || !data.content[0]) {
-                    throw new Error(data.error || "The server sent an invalid response.");
-                }
-
-                const text = data.content[0].text;
-
-                // 1. Weather Update
-                const wMatch = text.match(/WEATHER:\s*(.*)/i);
-                if (wMatch) {
-                    const [t, s] = wMatch[1].split('|');
-                    document.getElementById('temp').textContent = t.trim();
-                    document.getElementById('weather-desc').textContent = s.trim();
-                }
-
-                // 2. Parse News
-                const news = { HIGHLIGHTS: [], CRIME: [], POLITICS: [], TRANSPORT: [], CULTURE: [], "THE NETHERLANDS": [], INTERNATIONAL: [] };
-                const blocks = text.split('---').filter(b => b.includes('TITLE:'));
-
-                blocks.forEach(b => {
-                    const item = {
-                        t: b.match(/TITLE:\s*(.*)/)?.[1] || "Untitled",
-                        d: b.match(/DESCRIPTION:\s*(.*)/)?.[1] || "",
-                        u: b.match(/https?:\/\/[^\s\n]+/)?.[0]?.replace(/[)]/g, '') || "#",
-                        s: b.match(/SOURCE:\s*(.*)/)?.[1] || "Desk",
-                        c: b.match(/CATEGORY:\s*(.*)/)?.[1]?.toUpperCase().trim() || "HIGHLIGHTS"
-                    };
-                    if (news[item.c]) news[item.c].push(item);
-                });
-
-                // 3. Ticker & Rendering
-                if (news.INTERNATIONAL.length > 0) {
-                    document.getElementById('ticker').innerHTML = news.INTERNATIONAL.map(a => `<span class="ticker-item text-red-500 font-bold">WORLD</span><span class="ticker-item">${a.t}</span>`).join('');
-                }
-
-                const mapping = { 'highlights-box': 'HIGHLIGHTS', 'crime-box': 'CRIME', 'transport-box': 'TRANSPORT', 'netherlands-box': 'THE NETHERLANDS', 'international-box': 'INTERNATIONAL', 'politics-box': 'POLITICS', 'culture-box': 'CULTURE' };
-                Object.keys(mapping).forEach(id => {
-                    const container = document.getElementById(id);
-                    container.innerHTML = (news[mapping[id]] || []).map(a => `<div class="news-card"><h3 class="font-black text-lg leading-tight mb-1"><a href="${a.u}" target="_blank" class="hover:underline">${a.t}</a></h3><p class="text-[10px] text-gray-600 mb-1">${a.d}</p><div class="text-[9px] font-bold uppercase text-gray-400">Source: ${a.s}</div></div>`).join('');
-                });
-            } catch (e) { console.error(e); } finally { btn.textContent = "UPDATE EDITION"; }
-        }
-        document.getElementById('displayDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
-    </script>
-</body>
-</html>
+            btn.
