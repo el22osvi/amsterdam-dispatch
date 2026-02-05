@@ -1,79 +1,103 @@
-const express = require('express');
-const cors = require('cors');
-const Parser = require('rss-parser');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amsterdam Dispatch | Global Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@900&family=Libre+Baskerville&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Libre Baskerville', serif; background-color: #f4f1ea; color: #1a1a1a; }
+        .headline { font-family: 'Playfair Display', serif; }
+        .newspaper-border { border-top: 4px solid black; border-bottom: 1px solid black; }
+        .section-title { border-bottom: 2px solid black; display: inline-block; margin-bottom: 1.5rem; font-weight: 900; text-transform: uppercase; }
+        .news-card { margin-bottom: 1.5rem; border-bottom: 1px solid #ddd; padding-bottom: 1rem; }
+        .ticker-wrap { background: #000; color: #fff; padding: 10px 0; overflow: hidden; white-space: nowrap; border-bottom: 2px solid #ef4444; }
+        .ticker-move { display: inline-block; animation: ticker 40s linear infinite; }
+        .ticker-item { display: inline-block; padding: 0 2rem; font-weight: bold; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; }
+        @keyframes ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body>
 
-const app = express();
-const parser = new Parser();
-app.use(cors());
-app.use(express.json());
+    <div class="ticker-wrap"><div id="ticker" class="ticker-move"><span class="ticker-item">Awaiting Dispatch...</span></div></div>
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    <header class="max-w-6xl mx-auto text-center my-10 px-4">
+        <div class="newspaper-border py-8">
+            <h1 class="text-6xl md:text-8xl headline font-black">AMSTERDAM DISPATCH</h1>
+            <p class="uppercase text-xs font-bold mt-2 tracking-widest">Live RSS Intelligence • <span id="displayDate"></span></p>
+        </div>
+        <button onclick="fetchNews()" id="btn" class="mt-6 border-2 border-black px-12 py-2 font-bold hover:bg-black hover:text-white transition-all text-xs tracking-tighter">UPDATE EDITION</button>
+    </header>
 
-const FEEDS = [
-    'https://at5.nl/rss',
-    'https://www.parool.nl/amsterdam/rss.xml',
-    'https://www.volkskrant.nl/voorpagina/rss.xml',
-    'https://feeds.nos.nl/nosnieuwsbinnenland',
-    'http://feeds.bbci.co.uk/news/world/rss.xml',
-    'https://www.knmi.nl/nederland-nu/weer/verwachtingen.rss' // KNMI Weather Feed
-];
+    <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-10">
+        <div class="md:col-span-1 space-y-10">
+            <div class="border-4 border-black p-4 bg-white shadow-[4px_4px_0_#000]">
+                <h3 class="text-[10px] font-bold uppercase border-b border-black mb-2">KNMI Weather</h3>
+                <div class="flex justify-between items-center">
+                    <span id="temp" class="text-4xl headline font-black">--°</span>
+                    <span id="weather-desc" class="text-[10px] uppercase font-bold text-gray-500 text-right w-1/2">Loading...</span>
+                </div>
+            </div>
+            <section><h2 class="section-title text-xl">Crime</h2><div id="crime-box"></div></section>
+            <section><h2 class="section-title text-xl">Transport</h2><div id="transport-box"></div></section>
+        </div>
 
-app.post('/api/fetch-news', async (req, res) => {
-    try {
-        let allEntries = [];
-        for (const url of FEEDS) {
+        <div class="md:col-span-3 space-y-12">
+            <section><h2 class="section-title text-2xl">Highlights</h2><div id="highlights-box" class="grid grid-cols-1 md:grid-cols-2 gap-8"></div></section>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-10 pt-8 border-t-2 border-black">
+                <section><h2 class="section-title text-xl">The Netherlands</h2><div id="netherlands-box"></div></section>
+                <section><h2 class="section-title text-xl">International</h2><div id="international-box"></div></section>
+            </div>
+            <section class="pt-8 border-t border-gray-300"><h2 class="section-title text-xl">Politics & Culture</h2><div id="politics-box" class="grid grid-cols-2 gap-4"></div><div id="culture-box" class="grid grid-cols-2 gap-4 mt-4"></div></section>
+        </div>
+    </main>
+
+    <script>
+        async function fetchNews() {
+            const btn = document.getElementById('btn');
+            btn.textContent = "PRINTING...";
             try {
-                const feed = await parser.parseURL(url);
-                const source = url.includes('knmi') ? 'KNMI' : 
-                               url.includes('at5') ? 'AT5' : 
-                               url.includes('parool') ? 'Het Parool' : 
-                               url.includes('volkskrant') ? 'de Volkskrant' : 
-                               url.includes('nos') ? 'NOS' : 'BBC News';
-                
-                const items = feed.items.slice(0, 5).map(e => ({
-                    title: e.title,
-                    content: e.contentSnippet || e.content || "",
-                    link: e.link,
-                    source
-                }));
-                allEntries = allEntries.concat(items);
-            } catch (e) { console.error("Feed error:", url); }
+                const response = await fetch("https://amsterdam-news-dispatch.onrender.com/api/fetch-news", { method: "POST" });
+                const data = await response.json();
+                const text = data.content[0].text;
+
+                // 1. Weather Update
+                const wMatch = text.match(/WEATHER:\s*(.*)/i);
+                if (wMatch) {
+                    const [t, s] = wMatch[1].split('|');
+                    document.getElementById('temp').textContent = t.trim();
+                    document.getElementById('weather-desc').textContent = s.trim();
+                }
+
+                // 2. Parse News
+                const news = { HIGHLIGHTS: [], CRIME: [], POLITICS: [], TRANSPORT: [], CULTURE: [], "THE NETHERLANDS": [], INTERNATIONAL: [] };
+                const blocks = text.split('---').filter(b => b.includes('TITLE:'));
+
+                blocks.forEach(b => {
+                    const item = {
+                        t: b.match(/TITLE:\s*(.*)/)?.[1] || "Untitled",
+                        d: b.match(/DESCRIPTION:\s*(.*)/)?.[1] || "",
+                        u: b.match(/https?:\/\/[^\s\n]+/)?.[0]?.replace(/[)]/g, '') || "#",
+                        s: b.match(/SOURCE:\s*(.*)/)?.[1] || "Desk",
+                        c: b.match(/CATEGORY:\s*(.*)/)?.[1]?.toUpperCase().trim() || "HIGHLIGHTS"
+                    };
+                    if (news[item.c]) news[item.c].push(item);
+                });
+
+                // 3. Ticker & Rendering
+                if (news.INTERNATIONAL.length > 0) {
+                    document.getElementById('ticker').innerHTML = news.INTERNATIONAL.map(a => `<span class="ticker-item text-red-500 font-bold">WORLD</span><span class="ticker-item">${a.t}</span>`).join('');
+                }
+
+                const mapping = { 'highlights-box': 'HIGHLIGHTS', 'crime-box': 'CRIME', 'transport-box': 'TRANSPORT', 'netherlands-box': 'THE NETHERLANDS', 'international-box': 'INTERNATIONAL', 'politics-box': 'POLITICS', 'culture-box': 'CULTURE' };
+                Object.keys(mapping).forEach(id => {
+                    const container = document.getElementById(id);
+                    container.innerHTML = (news[mapping[id]] || []).map(a => `<div class="news-card"><h3 class="font-black text-lg leading-tight mb-1"><a href="${a.u}" target="_blank" class="hover:underline">${a.t}</a></h3><p class="text-[10px] text-gray-600 mb-1">${a.d}</p><div class="text-[9px] font-bold uppercase text-gray-400">Source: ${a.s}</div></div>`).join('');
+                });
+            } catch (e) { console.error(e); } finally { btn.textContent = "UPDATE EDITION"; }
         }
-
-        const model = genAI.getGenerativeModel({ 
-            model: "gemini-3-flash", // 2026 Stable Model
-            tools: [{ googleSearch: {} }] 
-        });
-
-        const prompt = `
-            Task: Curate the Amsterdam Dispatch.
-            
-            1. WEATHER: Find the KNMI weather entry. Extract the current Temp and a 2-word Status.
-            2. NEWS: Categorize the remaining items into: HIGHLIGHTS, CRIME, POLITICS, TRANSPORT, CULTURE, THE NETHERLANDS, INTERNATIONAL.
-            3. Translate all non-English text to English.
-
-            Format:
-            WEATHER: [Temp] | [Status]
-            ---
-            CATEGORY: [Category]
-            TITLE: [Title]
-            SOURCE: [Source]
-            DESCRIPTION: [1-2 sentences]
-            URL: [Link]
-            ---
-            
-            DATA:
-            ${allEntries.map(e => `[${e.source}] ${e.title} - ${e.content} - ${e.link}`).join('\n')}
-        `;
-
-        const result = await model.generateContent(prompt);
-        res.json({ content: [{ text: result.response.text() }] });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Dispatch failed" });
-    }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Intelligence Server Live`));
+        document.getElementById('displayDate').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
+    </script>
+</body>
+</html>
