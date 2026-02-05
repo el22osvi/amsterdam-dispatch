@@ -134,35 +134,43 @@
         }
 
         // --- PARSER LOGIC ---
-        function parseNewsResponse(text) {
-            const sections = text.split('---').filter(s => s.trim());
-            const result = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
+       function parseNewsResponse(text) {
+    // Split by the dash separator
+    const sections = text.split('---').filter(s => s.trim().length > 20);
+    const result = { highlights: [], crime: [], politics: [], transport: [], culture: [] };
 
-            sections.forEach(section => {
-                const article = {};
-                section.split('\n').forEach(line => {
-                    const [key, ...val] = line.split(':');
-                    if (val.length > 0) {
-                        const k = key.trim().toUpperCase();
-                        const v = val.join(':').trim();
-                        if (k === 'CATEGORY') article.category = v;
-                        if (k === 'TITLE') article.title = v;
-                        if (k === 'SOURCE') article.source = v;
-                        if (k === 'DATE') article.date = v;
-                        if (k === 'DESCRIPTION') article.description = v;
-                        if (k === 'URL') article.url = v;
-                    }
-                });
+    sections.forEach(section => {
+        const article = {};
+        const lines = section.split('\n');
+        
+        lines.forEach(line => {
+            const upperLine = line.trim().toUpperCase();
+            // Safer URL extraction: finds any string starting with http
+            if (upperLine.includes('URL:')) {
+                const urlMatch = line.match(/https?:\/\/[^\s]+/g);
+                article.url = urlMatch ? urlMatch[0] : "#";
+            } else if (upperLine.startsWith('CATEGORY:')) {
+                article.category = line.split(':')[1].trim();
+            } else if (upperLine.startsWith('TITLE:')) {
+                article.title = line.split(':')[1].trim();
+            } else if (upperLine.startsWith('SOURCE:')) {
+                article.source = line.split(':')[1].trim();
+            } else if (upperLine.startsWith('DESCRIPTION:')) {
+                article.description = line.split(':')[1].trim();
+            }
+        });
 
-                if (article.title && article.category) {
-                    const c = article.category.toLowerCase();
-                    if (c.includes('highlight')) result.highlights.push(article);
-                    else if (c.includes('crime')) result.crime.push(article);
-                    else if (c.includes('politic')) result.politics.push(article);
-                    else if (c.includes('transport')) result.transport.push(article);
-                    else if (c.includes('culture')) result.culture.push(article);
-                }
-            });
+        if (article.title && article.category) {
+            const cat = article.category.toUpperCase();
+            if (cat.includes('HIGHLIGHT')) result.highlights.push(article);
+            else if (cat.includes('CRIME')) result.crime.push(article);
+            else if (cat.includes('POLITIC')) result.politics.push(article);
+            else if (cat.includes('TRANSPORT')) result.transport.push(article);
+            else if (cat.includes('CULTURE')) result.culture.push(article);
+        }
+    });
+    return result;
+}
             return result;
         }
 
