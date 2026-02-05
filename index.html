@@ -113,7 +113,6 @@
                 
                 if (data && data.content && data.content[0].text) {
                     const freshData = parseNewsResponse(data.content[0].text);
-                    // FIXED: We check if ANY category has news, not just highlights
                     const hasNews = Object.values(freshData).some(arr => arr.length > 0);
                     
                     if (hasNews) {
@@ -124,7 +123,7 @@
                 }
             } catch (error) {
                 console.error('Update failed:', error);
-                alert("The server is still waking up. Please try again in 30 seconds.");
+                alert("The server is still waking up. Please try again in 15 seconds.");
             } finally {
                 overlay.classList.add('hidden');
                 btn.disabled = false;
@@ -167,7 +166,7 @@
         }
 
         function renderNews() {
-            // 1. Render Highlights
+            // Highlights
             document.getElementById('highlightsContainer').innerHTML = newsData.highlights.slice(0,2).map((a, i) => `
                 <article class="border-2 border-black p-6 bg-white fade-in">
                     <img src="${categoryImages['highlight'+(i+1)] || categoryImages.highlight1}" class="w-full h-64 object-cover mb-4 highlight-image">
@@ -177,16 +176,16 @@
                 </article>
             `).join('');
 
-            // 2. Render Crime
+            // Crime
             document.getElementById('crimeContainer').innerHTML = newsData.crime.map(a => `
-                <article class="news-card bg-white p-5 border-l-4 border-black fade-in">
+                <article class="news-card bg-white p-5 border-l-4 border-black fade-in mb-4">
                     <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
                     <p class="text-xs">${a.description}</p>
                     <div class="text-[10px] mt-2 uppercase font-bold text-gray-500">${a.source}</div>
                 </article>
             `).join('');
 
-            // 3. Render Politics
+            // Politics
             document.getElementById('politicsContainer').innerHTML = newsData.politics.map(a => `
                 <article class="news-card bg-white p-5 border-l-4 border-black fade-in mb-4">
                     <h3 class="text-lg headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
@@ -195,7 +194,7 @@
                 </article>
             `).join('');
 
-            // 4. Render Transport
+            // Transport
             document.getElementById('transportContainer').innerHTML = newsData.transport.map(a => `
                 <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
                     <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
@@ -203,7 +202,7 @@
                 </article>
             `).join('');
 
-            // 5. Render Culture
+            // Culture
             document.getElementById('cultureContainer').innerHTML = newsData.culture.map(a => `
                 <article class="news-card bg-white p-4 border-l-4 border-black fade-in mb-4">
                     <h3 class="text-base headline-font mb-2 leading-tight"><a href="${a.url}" target="_blank" class="hover:underline">${a.title}</a></h3>
@@ -214,7 +213,8 @@
 
         function updateLastUpdated() {
             const now = new Date();
-            document.getElementById('lastUpdated').textContent = `Last Edition: ${now.toLocaleString()}`;
+            const lastUpdatedElem = document.getElementById('lastUpdated');
+            if(lastUpdatedElem) lastUpdatedElem.textContent = `Last Edition: ${now.toLocaleString()}`;
         }
 
         function updateDateTime() {
