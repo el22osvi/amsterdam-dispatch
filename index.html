@@ -57,9 +57,16 @@
         async function fetchNews() {
             const btn = document.getElementById('btn');
             btn.textContent = "PRINTING...";
+            
             try {
                 const response = await fetch("https://amsterdam-news-dispatch.onrender.com/api/fetch-news", { method: "POST" });
                 const data = await response.json();
+
+                // SAFETY CHECK: Prevents the 0-reading crash
+                if (!response.ok || !data.content || !data.content[0]) {
+                    throw new Error(data.error || "The server sent an invalid response.");
+                }
+
                 const text = data.content[0].text;
 
                 // 1. Weather Update
