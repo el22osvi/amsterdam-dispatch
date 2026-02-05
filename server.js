@@ -6,10 +6,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 const parser = new Parser();
 
-// Fixes the CORS block
+// 1. MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 
+// 2. INITIALIZE AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const FEEDS = [
@@ -21,8 +22,10 @@ const FEEDS = [
     'https://www.knmi.nl/nederland-nu/weer/verwachtingen.rss'
 ];
 
+// 3. MAIN ROUTE
 app.post('/api/fetch-news', async (req, res) => {
     try {
+        // --- STEP 1: FETCH RSS DATA ---
         let allEntries = [];
         for (const url of FEEDS) {
             try {
@@ -40,36 +43,17 @@ app.post('/api/fetch-news', async (req, res) => {
                     source
                 }));
                 allEntries = allEntries.concat(items);
-            } catch (e) { console.error("Feed error:", url); }
+            } catch (e) { 
+                console.error("Feed error:", url); 
+            }
         }
 
-        // Using the 2026 Stable Alias
-        try {
-    // USE THIS STABLE ALIAS instead of a specific version number
-    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); 
-
-    const prompt = `... your prompt ...`;
-    
-    // Add a timeout safety - sometimes the AI takes too long
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-
-    if (!text || text.length < 5) {
-        throw new Error("AI returned empty or invalid text.");
-    }
-
-    res.json({ content: [{ text: text }] });
-} catch (error) {
-    console.error("DETAILED ERROR:", error);
-    // Send the actual error back so we can see it in the browser console
-    res.status(500).json({ error: error.message });
-};
-
+        // --- STEP 2: CONSTRUCT PROMPT ---
         const prompt = `
             Task: Curate the Amsterdam Dispatch.
             
-            1. WEATHER: Find the KNMI weather entry. Extract Temp and a 2-word Status.
-            2. NEWS: Categorize into: HIGHLIGHTS, CRIME, POLITICS, TRANSPORT, CULTURE, THE NETHERLANDS, INTERNATIONAL.
+            1. WEATHER: Find the KNMI weather entry in the DATA below. Extract Temp and a 2-word Status.
+            2. NEWS: Categorize the other items into: HIGHLIGHTS, CRIME, POLITICS, TRANSPORT, CULTURE, THE NETHERLANDS, INTERNATIONAL.
             3. Translate all non-English text to English.
 
             Format:
@@ -86,19 +70,32 @@ app.post('/api/fetch-news', async (req, res) => {
             ${allEntries.map(e => `[${e.source}] ${e.title} - ${e.content} - ${e.link}`).join('\n')}
         `;
 
+        // --- STEP 3: EXECUTE AI REQUEST ---
+        // Using the stable alias "gemini-flash-latest" for February 2026
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" }); 
+
         const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const text = response.text();
+        const text = result.response.text();
 
-        if (!text) throw new Error("AI returned empty content");
+        if (!text || text.length < 10) {
+            throw new Error("AI returned an empty or invalid dispatch.");
+        }
 
+        // --- STEP 4: SEND SUCCESS RESPONSE ---
         res.json({ content: [{ text: text }] });
 
     } catch (error) {
-        console.error("SERVER CRASH:", error.message);
-        // Send actual error back to frontend so we can debug
-        res.status(500).json({ error: error.message, status: "INTERNAL_ERROR" });
+        console.error("SERVER ERROR:", error.message);
+        // This ensures the frontend gets a valid JSON error message instead of a crash
+        res.status(500).json({ 
+            error: error.message, 
+            status: "INTERNAL_SERVER_ERROR" 
+        });
     }
 });
 
-const PORT = process.env.
+// 4. START SERVER
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Amsterdam News Server is live on port ${PORT}`);
+});
